@@ -1,47 +1,87 @@
 package se.kth.PolicyService.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import se.kth.PolicyService.model.*;
-import se.kth.PolicyService.model.Attributes.Environment;
-import se.kth.PolicyService.model.Attributes.Resource;
-import se.kth.PolicyService.model.Attributes.Role;
-import se.kth.PolicyService.model.Attributes.User;
-import se.kth.PolicyService.service.*;
+import se.kth.PolicyService.model.EvaluatePermissionRequest;
+import se.kth.PolicyService.model.Policy;
+import se.kth.PolicyService.service.PolicyEvaluator;
+import se.kth.PolicyService.service.PolicyService;
 
-import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/policy")
+@RequestMapping("/api/policies")
 public class PolicyController {
+    @Autowired
+    private PolicyService policyService;
 
     @Autowired
-    private RoleAssignmentService roleAssignmentService;
+    private PolicyEvaluator policyEvaluator;
 
-    @Autowired
-    private PermissionAssignmentService permissionAssignmentService;
-
-    @GetMapping("/assign-role")
-    public String assignRole(@RequestParam String userId, @RequestParam String userName,
-                             @RequestParam String userPosition, @RequestParam String userDepartment,
-                             @RequestParam String envTime, @RequestParam String envLocation) {
-        User user = new User(userId, userName, userPosition, userDepartment);
-        Environment environment = new Environment(LocalTime.parse(envTime), envLocation);
-
-        String roleName = roleAssignmentService.assignRole(user, environment);
-        return roleName != null ? "Assigned role: " + roleName : "No role assigned";
+    @GetMapping
+    public List<Policy> getAllPolicies() {
+        return policyService.getAllPolicies();
     }
 
-    @GetMapping("/assign-permissions")
-    public List<String> assignPermissions(@RequestParam String roleName, @RequestParam String resourceId,
-                                          @RequestParam String resourceType, @RequestParam String resourceOwner,
-                                          @RequestParam String resourceCreationDate, @RequestParam String envTime,
-                                          @RequestParam String envLocation) {
-        Role role = new Role(roleName, List.of());
-        Resource resource = new Resource(resourceId, resourceType, resourceOwner, resourceCreationDate);
-        Environment environment = new Environment(LocalTime.parse(envTime), envLocation);
-
-        return permissionAssignmentService.assignPermissions(role, resource, environment);
+    @GetMapping("/{id}")
+    public ResponseEntity<Policy> getPolicyById(@PathVariable Long id) {
+        Policy policy = policyService.getPolicyById(id);
+        if (policy != null) {
+            return ResponseEntity.ok(policy);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
+
+    @PostMapping
+    public Policy createPolicy(@RequestBody Policy policy) {
+        return policyService.createPolicy(policy);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Policy> updatePolicy(@PathVariable Long id, @RequestBody Policy policyDetails) {
+        Policy updatedPolicy = policyService.updatePolicy(id, policyDetails);
+        if (updatedPolicy != null) {
+            return ResponseEntity.ok(updatedPolicy);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePolicy(@PathVariable Long id) {
+        policyService.deletePolicy(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/evaluate-role")
+    public ResponseEntity<String> evaluateUserToRole(@RequestBody Map<String, String> userAttributes, @RequestBody Map<String, String> environmentAttributes) {
+        List<Policy> policies = policyService.getAllPolicies();
+        String role = policyEvaluator.evaluateUserToRole(policies, userAttributes, environmentAttributes);
+        if (role != null) {
+            return ResponseEntity.ok(role);
+        } else {
+            return ResponseEntity.badRequest().body("No matching role found");
+        }
+    }
+
+    @PostMapping("/evaluate-permission")
+    public ResponseEntity<String> evaluateUserToPermission(@RequestBody EvaluatePermissionRequest request) {
+        List<Policy> policies = policyService.getAllPolicies();
+        String permission = policyEvaluator.evaluateUserToPermission(
+                policies,
+                request.getUserAttributes(),
+                request.getResourceAttributes(),
+                request.getEnvironmentAttributes()
+        );
+        if (permission != null) {
+            return ResponseEntity.ok(permission);
+        } else {
+            return ResponseEntity.badRequest().body("No matching permission found");
+        }
+    }
+
+
 }

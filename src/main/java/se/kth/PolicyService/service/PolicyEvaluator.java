@@ -1,7 +1,9 @@
 package se.kth.PolicyService.service;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import se.kth.PolicyService.model.DTO.User;
 import se.kth.PolicyService.model.Policy;
 
 import java.util.List;
@@ -10,19 +12,25 @@ import java.util.Map;
 @Service
 public class PolicyEvaluator {
 
-    public String evaluateUserToRole(List<Policy> policies, Map<String, String> userAttributes, Map<String, String> environmentAttributes) {
+    @Autowired
+    private UserClient userClient;
+    public String evaluateUserToRole(List<Policy> policies,Long userId, Map<String, String> environmentAttributes) {
+        User user = userClient.getUserById(userId);
+
         for (Policy policy : policies) {
-            if (policy.getType().equals("UserToRole") && evaluateCondition(policy.getCondition(), userAttributes, environmentAttributes)) {
+            if (policy.getType().equals("UserToRole") && evaluateCondition(policy.getCondition(), user, environmentAttributes)) {
                 return policy.getAction().split("=")[1];
             }
         }
         return null;
     }
 
-    public String evaluateUserToPermission(List<Policy> policies, Map<String, String> userAttributes, Map<String, String> resourceAttributes,
+    public String evaluateUserToPermission(List<Policy> policies, Long userId, Map<String, String> resourceAttributes,
                                            Map<String, String> environmentAttributes) {
+        User user = userClient.getUserById(userId);
+
         for (Policy policy : policies) {
-            if (policy.getType().equals("UserToPermission") && evaluateCondition(policy.getCondition(), userAttributes, resourceAttributes,
+            if (policy.getType().equals("UserToPermission") && evaluateCondition(policy.getCondition(), user, resourceAttributes,
                     environmentAttributes)) {
                 return policy.getAction();
             }
@@ -30,7 +38,95 @@ public class PolicyEvaluator {
         return null;
     }
 
-    private boolean evaluateCondition(String condition, Map<String, String>... attributes) {
+    private boolean evaluateCondition(String condition, User user, Map<String, String> environmentAttributes) {
+        String[] conditions = condition.split(" AND ");
+        for (String cond : conditions) {
+            String[] keyValue = cond.split("=");
+            if (keyValue.length != 2) {
+                return false;
+            }
+            String key = keyValue[0].trim();
+            String value = keyValue[1].trim();
+            switch (key) {
+                case "user":
+                    if (!user.getName().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "institution":
+                    if (!user.getInstitution().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "position":
+                    if (!user.getPosition().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "rank":
+                    if (!user.getRank().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "environment":
+                    if (!environmentAttributes.getOrDefault(key, "").equals(value)) {
+                        return false;
+                    }
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean evaluateCondition(String condition, User user, Map<String, String> resourceAttributes, Map<String, String> environmentAttributes) {
+        String[] conditions = condition.split(" AND ");
+        for (String cond : conditions) {
+            String[] keyValue = cond.split("=");
+            if (keyValue.length != 2) {
+                return false;
+            }
+            String key = keyValue[0].trim();
+            String value = keyValue[1].trim();
+            switch (key) {
+                case "user":
+                    if (!user.getName().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "institution":
+                    if (!user.getInstitution().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "position":
+                    if (!user.getPosition().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "rank":
+                    if (!user.getRank().equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "resource_type":
+                    if (!resourceAttributes.getOrDefault("resource_type", "").equals(value)) {
+                        return false;
+                    }
+                    break;
+                case "location":
+                    if (!environmentAttributes.getOrDefault("location", "").equals(value)) {
+                        return false;
+                    }
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+   /* private boolean evaluateCondition(String condition, Map<String, String>... attributes) {
 
         String[] parts = condition.split("AND");
         for (String part : parts) {
@@ -46,6 +142,11 @@ public class PolicyEvaluator {
         }
         return true;
     }
+
+    */
+
+
+
 }
 
 

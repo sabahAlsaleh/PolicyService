@@ -57,10 +57,10 @@ public class PolicyController {
     }
 
     @PostMapping("/evaluate-role")
-    public ResponseEntity<String> evaluateUserToRole(@RequestBody Map<String, String> userAttributes,
+    public ResponseEntity<String> evaluateUserToRole(@RequestParam Long userId,
                                                      @RequestBody Map<String, String> environmentAttributes) {
         List<Policy> policies = policyService.getAllPolicies();
-        String role = policyEvaluator.evaluateUserToRole(policies, userAttributes, environmentAttributes);
+        String role = policyEvaluator.evaluateUserToRole(policies, userId, environmentAttributes);
         if (role != null) {
             return ResponseEntity.ok(role);
         } else {
@@ -69,11 +69,12 @@ public class PolicyController {
     }
 
     @PostMapping("/evaluate-permission")
-    public ResponseEntity<String> evaluateUserToPermission(@RequestBody EvaluatePermissionRequest request) {
+    public ResponseEntity<String> evaluateUserToPermission(@RequestParam Long userId,
+                                                           @RequestBody EvaluatePermissionRequest request) {
         List<Policy> policies = policyService.getAllPolicies();
         String permission = policyEvaluator.evaluateUserToPermission(
                 policies,
-                request.getUserAttributes(),
+                userId,
                 request.getResourceAttributes(),
                 request.getEnvironmentAttributes()
         );

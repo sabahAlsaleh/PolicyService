@@ -57,7 +57,8 @@ public class PolicyController {
     }
 
     @PostMapping("/evaluate-role")
-    public ResponseEntity<String> evaluateUserToRole(@RequestBody Map<String, String> userAttributes, @RequestBody Map<String, String> environmentAttributes) {
+    public ResponseEntity<String> evaluateUserToRole(@RequestBody Map<String, String> userAttributes,
+                                                     @RequestBody Map<String, String> environmentAttributes) {
         List<Policy> policies = policyService.getAllPolicies();
         String role = policyEvaluator.evaluateUserToRole(policies, userAttributes, environmentAttributes);
         if (role != null) {

@@ -19,9 +19,11 @@ public class PolicyEvaluator {
         return null;
     }
 
-    public String evaluateUserToPermission(List<Policy> policies, Map<String, String> userAttributes, Map<String, String> resourceAttributes, Map<String, String> environmentAttributes) {
+    public String evaluateUserToPermission(List<Policy> policies, Map<String, String> userAttributes, Map<String, String> resourceAttributes,
+                                           Map<String, String> environmentAttributes) {
         for (Policy policy : policies) {
-            if (policy.getType().equals("UserToPermission") && evaluateCondition(policy.getCondition(), userAttributes, resourceAttributes, environmentAttributes)) {
+            if (policy.getType().equals("UserToPermission") && evaluateCondition(policy.getCondition(), userAttributes, resourceAttributes,
+                    environmentAttributes)) {
                 return policy.getAction();
             }
         }
@@ -29,8 +31,7 @@ public class PolicyEvaluator {
     }
 
     private boolean evaluateCondition(String condition, Map<String, String>... attributes) {
-        // Implement condition evaluation logic based on attributes
-        // For simplicity, assuming conditions are in the format "key=value"
+
         String[] parts = condition.split("AND");
         for (String part : parts) {
             String[] keyValue = part.trim().split("=");
@@ -46,3 +47,7 @@ public class PolicyEvaluator {
         return true;
     }
 }
+
+
+// Implement condition evaluation logic based on attributes
+// For simplicity, assuming conditions are in the format "key=value"

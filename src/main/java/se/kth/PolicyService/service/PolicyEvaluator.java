@@ -49,7 +49,7 @@ public class PolicyEvaluator {
             String value = keyValue[1].trim();
             switch (key) {
                 case "user":
-                    if (!user.getName().equals(value)) {
+                    if (!user.getUsername().equals(value)) {
                         return false;
                     }
                     break;
@@ -91,7 +91,7 @@ public class PolicyEvaluator {
             String value = keyValue[1].trim();
             switch (key) {
                 case "user":
-                    if (!user.getName().equals(value)) {
+                    if (!user.getUsername().equals(value)) {
                         return false;
                     }
                     break;

@@ -15,7 +15,7 @@ import java.time.Period;
 public class User {
 
     private Long id;
-    private String name;
+    private String username;
     private String institution;
     private String position;
     private String rank;

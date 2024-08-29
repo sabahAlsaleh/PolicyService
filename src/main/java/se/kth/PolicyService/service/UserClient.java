@@ -13,9 +13,17 @@ public class UserClient {
     private RestTemplate restTemplate;
 
     public User getUserById(Long userId) {
-        String url = "http://localhost:8081/api/users/" + userId;
-        return restTemplate.getForObject(url, User.class);
+        String url = "http://localhost:8081/api/user/auth/" + userId;
+        try {
+            return restTemplate.getForObject(url, User.class);
+        } catch (Exception e) {
+            // Handle exception (e.g., log error, rethrow, return null)
+            e.printStackTrace();
+            return null;
+        }
+
     }
+
 
     public Role getRoleById(Long roleId) {
         String url = "http://localhost:8081/api/roles/" + roleId;
